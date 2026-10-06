@@ -12,12 +12,21 @@ const getTodos = async (req, res) => {
       .skip(skipIndex)
       .limit(limit);
 
-    const totalTodos = await Todo.countDocuments();
+    const [totalTodos, activeTodos, completedTodos] = await Promise.all([
+      Todo.countDocuments(),
+      Todo.countDocuments({ completed: { $ne: true } }),
+      Todo.countDocuments({ completed: true }),
+    ]);
 
     res.json({
       todos,
       totalPages: Math.ceil(totalTodos / limit),
       currentPage: page,
+      stats: {
+        total: totalTodos,
+        active: activeTodos,
+        completed: completedTodos,
+      },
     });
   } catch (err) {
     console.error(err);

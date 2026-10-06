@@ -22,9 +22,9 @@ function ProgressRing({ percent }) {
   );
 }
 
-function Sidebar({ todos, filter, onFilter, onClearDone }) {
-  const doneCount = todos.filter(FILTERS.done.test).length;
-  const percent = todos.length ? (doneCount / todos.length) * 100 : 0;
+function Sidebar({ stats, filter, onFilter, onClearDone }) {
+  const doneCount = stats.completed;
+  const percent = stats.total ? (doneCount / stats.total) * 100 : 0;
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long",
     day: "numeric",
@@ -46,22 +46,24 @@ function Sidebar({ todos, filter, onFilter, onClearDone }) {
         <div>
           <p className="date">{today}</p>
           <p className="summary-text">
-            {todos.length === 0
+            {stats.total === 0
               ? "No tasks yet"
-              : `${doneCount} of ${todos.length} tasks done`}
+              : `${doneCount} of ${stats.total} tasks done`}
           </p>
         </div>
       </div>
 
       <nav className="filters">
-        {Object.entries(FILTERS).map(([key, { label, test }]) => (
+        {Object.entries(FILTERS).map(([key, { label }]) => (
           <button
             key={key}
             className={filter === key ? "active" : ""}
             onClick={() => onFilter(key)}
           >
             {label}
-            <span className="count">{todos.filter(test).length}</span>
+            <span className="count">
+              {key === "all" ? stats.total : key === "active" ? stats.active : stats.completed}
+            </span>
           </button>
         ))}
       </nav>

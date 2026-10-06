@@ -12,6 +12,7 @@ function App() {
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [stats, setStats] = useState({ total: 0, active: 0, completed: 0 });
 
   // Shows an error in the banner (and logs it in the console)
   function showError(err) {
@@ -27,6 +28,7 @@ function App() {
         const data = await getTodos(currentPage);
         setTodos(data.todos);
         setTotalPages(data.totalPages);
+        setStats(data.stats);
       } catch (err) {
         showError(err);
       } finally {
@@ -43,6 +45,7 @@ function App() {
       setError("");
       const newTodo = await createTodo(title);
       setTodos((prev) => [newTodo, ...prev]);
+      setStats((prev) => ({ ...prev, total: prev.total + 1, active: prev.active + 1 }));
     } catch (err) {
       showError(err);
     }
@@ -55,7 +58,15 @@ function App() {
       const updated = await updateTodo(id, data);
       // TODO: Complete this. Update the `todos` state so the edited todo is
       // replaced with `updated` (keep every other todo as it is).
+      const previous = todos.find((todo) => todo._id === id);
       setTodos((prev) => prev.map((todo) => (todo._id === id ? updated : todo)));
+      if (previous && previous.completed !== updated.completed) {
+        setStats((prev) => ({
+          ...prev,
+          active: prev.active + (updated.completed ? -1 : 1),
+          completed: prev.completed + (updated.completed ? 1 : -1),
+        }));
+      }
     } catch (err) {
       showError(err);
     }
@@ -66,7 +77,16 @@ function App() {
     try {
       setError("");
       await deleteTodo(id);
+      const deleted = todos.find((todo) => todo._id === id);
       setTodos((prev) => prev.filter((todo) => todo._id !== id));
+      if (deleted) {
+        setStats((prev) => ({
+          ...prev,
+          total: prev.total - 1,
+          [deleted.completed ? "completed" : "active"]:
+            prev[deleted.completed ? "completed" : "active"] - 1,
+        }));
+      }
     } catch (err) {
       showError(err);
     }
@@ -83,6 +103,11 @@ function App() {
       }
 
       setTodos((prev) => prev.filter((todo) => !todo.completed));
+      setStats((prev) => ({
+        ...prev,
+        total: prev.total - doneTodos.length,
+        completed: prev.completed - doneTodos.length,
+      }));
     } catch (err) {
       showError(err);
     }
@@ -132,6 +157,7 @@ function App() {
     <div className="layout">
       <Sidebar
         todos={todos}
+        stats={stats}
         filter={filter}
         onFilter={setFilter}
         onClearDone={handleClearDone}
