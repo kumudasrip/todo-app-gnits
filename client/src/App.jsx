@@ -10,6 +10,8 @@ function App() {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Shows an error in the banner (and logs it in the console)
   function showError(err) {
@@ -22,18 +24,18 @@ function App() {
     async function loadTodos() {
       try {
         setError("");
-        const data = await getTodos();
-        setTodos(data);
+        const data = await getTodos(currentPage);
+        setTodos(data.todos);
+        setTotalPages(data.totalPages);
       } catch (err) {
         showError(err);
       } finally {
-        // Stop loading whether it worked or failed
         setLoading(false);
       }
     }
 
     loadTodos();
-  }, []);
+  }, [currentPage]);
 
   // Add a new todo to the top of the list
   async function handleAdd(title) {
@@ -155,6 +157,50 @@ function App() {
         )}
 
         {renderTodos()}
+
+        {totalPages > 1 && (
+          <div className="pagination-bar">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(1)}
+              className="page-btn"
+            >
+              &laquo;
+            </button>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="page-btn"
+            >
+              &lsaquo;
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                className={`page-btn ${currentPage === page ? "active" : ""}`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="page-btn"
+            >
+              &rsaquo;
+            </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              className="page-btn"
+            >
+              &raquo;
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

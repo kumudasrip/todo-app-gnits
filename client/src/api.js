@@ -10,7 +10,7 @@ const request = async (url, options) => {
   return data;
 };
 
-export const getTodos = () => request(API_URL);
+export const getTodos = (page = 1, limit = 10) => request(`${API_URL}?page=${page}&limit=${limit}`);
 
 export const createTodo = (title) =>
   request(API_URL, {

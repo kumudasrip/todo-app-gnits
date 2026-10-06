@@ -2,10 +2,23 @@ const Todo = require("../models/Todo");
 
 // GET /api/todos
 const getTodos = async (req, res) => {
-  // Complete this to get all todo items
   try {
-    const todos = await Todo.find();
-    res.json(todos);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skipIndex = (page - 1) * limit;
+
+    const todos = await Todo.find()
+      .sort({ createdAt: -1 })
+      .skip(skipIndex)
+      .limit(limit);
+
+    const totalTodos = await Todo.countDocuments();
+
+    res.json({
+      todos,
+      totalPages: Math.ceil(totalTodos / limit),
+      currentPage: page,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
